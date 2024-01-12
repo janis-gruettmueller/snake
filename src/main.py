@@ -1,4 +1,5 @@
 import time
+import sys
 import random
 from tkinter import *
 
@@ -25,10 +26,7 @@ class Food():
         self.pos = (random.randint(0, int(WIDTH/SCALE - 1)), random.randint(0, int(HEIGHT/SCALE - 1)))
 
     def show(self):
-        return board.create_rectangle(self.pos[0] * SCALE, self.pos[1] * SCALE, self.pos[0] * SCALE + SCALE, self.pos[1] * SCALE + SCALE, fill="red") 
-        
-    def get_new_position(self):
-        self.pos = (random.randint(0, int(WIDTH/SCALE - 1)), random.randint(0, int(HEIGHT/SCALE - 1)))
+        return board.create_rectangle(self.pos[0] * SCALE, self.pos[1] * SCALE, self.pos[0] * SCALE + SCALE, self.pos[1] * SCALE + SCALE, fill="red")
 
 
 class Snake():
@@ -38,65 +36,71 @@ class Snake():
         root.bind("<Up>", self.move_up)
         root.bind("<Down>", self.move_down)
 
-        self.head = (WIDTH/(2*SCALE), HEIGHT/(2*SCALE))
         self.speed = (0, 0)
-        self.body = []
+        self.body = [(WIDTH/(2*SCALE), HEIGHT/(2*SCALE))]
 
-    def set_direction(self, x, y): self.speed = (x, y)
+    def set_direction(self, x, y): 
+        self.speed = (x, y)
 
     def move_left(self, event): 
         self.set_direction(-1, 0)
 
-    def move_right(self, event): self.set_direction(1, 0)
+    def move_right(self, event): 
+        self.set_direction(1, 0)
 
-    def move_up(self, event): self.set_direction(0, -1)
+    def move_up(self, event): 
+        self.set_direction(0, -1)
 
-    def move_down(self, event): self.set_direction(0, 1)
+    def move_down(self, event): 
+        self.set_direction(0, 1)
 
-    def eat(self, food): self.body.append(food)
+    def eat(self, food):
+        pos = (food[0] - self.speed[0], food[1] - self.speed[1])
+        self.body.append(pos)
 
 
     def is_collision(self):
         # wall collision
-        if not (0 <= self.head[0] <= WIDTH/SCALE - 1 and 0 <= self.head[1] <= HEIGHT/SCALE - 1):
+        if not (0 <= self.body[0][0] <= WIDTH/SCALE - 1 and 0 <= self.body[0][1] <= HEIGHT/SCALE - 1):
             return True
         
         # body collision
-        if self.head in self.body:
-            return True
+        for pos in self.body[1:]:
+            if pos == self.body[0]:
+                return True
         
         return False
 
 
     def show(self, pos):
         return board.create_rectangle(pos[0] * SCALE, pos[1] * SCALE, pos[0] * SCALE + SCALE, pos[1] * SCALE + SCALE, fill="white")
+    
+    def update_pos(self):
+        self.body[0] = (self.body[0][0] + self.speed[0], self.body[0][1] + self.speed[1])
+
+        if len(self.body) >= 2:
+            for i in range(1, len(self.body)):
+                self.body[i] = self.body[i - 1]
 
 
     def update(self):
         food = Food()
-        food_pos = food.pos
-
-        snake_obj = []
         food_obj = food.show()
+        snake_obj = []
 
         while True:
-            snake_obj.append(self.show(self.head))
-            if len(self.body) > 0:
-                for i in range(len(self.body)-1):
-                    snake_obj.append(self.show(self.body[i]))
-                    self.body[i] = (self.body[i][0] + self.speed[0], self.body[i][1] + self.speed[1])
-                    
-            self.head = (self.head[0] + self.speed[0], self.head[1] + self.speed[1])
+            for pos in self.body:
+                snake_obj.append(self.show(pos))
+
+            self.update_pos()
 
             if self.is_collision():
-                print("Game Over!")
-                break
+                sys.exit("Game Over!")
 
-            if self.head == food_pos:
-                self.eat(food_pos)
-                food.get_new_position()
-                food_pos = food.pos
-                
+            if self.body[-1] == food.pos:
+                self.eat(food.pos)
+                food = Food()
+
                 board.delete(food_obj)
                 food_obj = food.show()
 
@@ -104,6 +108,8 @@ class Snake():
 
             for obj in snake_obj:
                 board.delete(obj)
+
+            snake_obj.clear()
 
             time.sleep(FRAME_RATE)
 
