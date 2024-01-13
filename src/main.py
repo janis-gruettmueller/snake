@@ -64,7 +64,9 @@ class Snake():
             return True
         
         # body collision
-        
+        for pos in self.body[1::]:
+            if pos == self.body[0]:
+                return True
         
         return False
 
