@@ -55,8 +55,7 @@ class Snake():
         self.set_direction(0, 1)
 
     def eat(self, food):
-        pos = (food[0] - self.speed[0], food[1] - self.speed[1])
-        self.body.append(pos)
+        self.body.append((food[0] - self.speed[0], food[1] - self.speed[1]))
 
 
     def is_collision(self):
@@ -65,7 +64,7 @@ class Snake():
             return True
         
         # body collision
-        for pos in self.body[1:]:
+        for pos in self.body[1::]:
             if pos == self.body[0]:
                 return True
         
@@ -76,11 +75,11 @@ class Snake():
         return board.create_rectangle(pos[0] * SCALE, pos[1] * SCALE, pos[0] * SCALE + SCALE, pos[1] * SCALE + SCALE, fill="white")
     
     def update_pos(self):
-        self.body[0] = (self.body[0][0] + self.speed[0], self.body[0][1] + self.speed[1])
-
-        if len(self.body) >= 2:
-            for i in range(1, len(self.body)):
+        if len(self.body) > 1:
+            for i in range(len(self.body)-1, 0, -1):
                 self.body[i] = self.body[i - 1]
+
+        self.body[0] = (self.body[0][0] + self.speed[0], self.body[0][1] + self.speed[1])
 
 
     def update(self):
